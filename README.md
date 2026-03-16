@@ -580,7 +580,7 @@ Starts the Laravel development server and opens the app in the browser to test f
 <img src="screenshots/Screenshot 2026-03-16 173248.png" width="900">
 
 
-### After create Message:
+### After Send Message:
 
 
 <img src="screenshots/Screenshot 2026-03-16 173257.png" width="900">
