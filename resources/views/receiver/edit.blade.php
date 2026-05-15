@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Create New Message')
+@section('title', 'Edit Message')
 
 @section('styles')
 <style>
@@ -37,10 +37,6 @@
         margin-bottom: 8px;
         font-weight: 600;
         color: #333;
-    }
-
-    .form-group label .required {
-        color: #ef4444;
     }
 
     .form-group input,
@@ -94,7 +90,7 @@
 
     .btn-back {
         display: inline-block;
-        margin-top: 20px;
+        margin-top: 15px;
         text-decoration: none;
         color: #4f46e5;
     }
@@ -113,17 +109,6 @@
         margin-bottom: 20px;
         border: 1px solid #fecaca;
     }
-
-    @media (max-width: 768px) {
-        .form-container {
-            padding: 25px;
-        }
-        
-        .form-row {
-            grid-template-columns: 1fr;
-            gap: 0;
-        }
-    }
 </style>
 @endsection
 
@@ -131,8 +116,8 @@
 <div class="container">
     <div class="form-container">
         <div class="form-header">
-            <h2> Create New Message</h2>
-           
+            <h2> Edit Message</h2>
+          
         </div>
 
         @if ($errors->any())
@@ -145,13 +130,14 @@
             </div>
         @endif
 
-        <form action="{{ route('receiver.store') }}" method="POST">
+        <form action="{{ route('receiver.update', $receiver->id) }}" method="POST">
             @csrf
+            @method('PUT')
 
             <div class="form-row">
                 <div class="form-group">
                     <label>Sender Name <span class="required">*</span></label>
-                    <input type="text" name="sender_name" value="{{ old('sender_name') }}" placeholder="Enter sender name">
+                    <input type="text" name="sender_name" value="{{ old('sender_name', $receiver->sender_name) }}" placeholder="Enter sender name">
                     @error('sender_name')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -159,7 +145,7 @@
 
                 <div class="form-group">
                     <label>Email Address</label>
-                    <input type="email" name="email" value="{{ old('email') }}" placeholder="sender@example.com">
+                    <input type="email" name="email" value="{{ old('email', $receiver->email) }}" placeholder="sender@example.com">
                     @error('email')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -169,7 +155,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Phone Number</label>
-                    <input type="text" name="phone" value="{{ old('phone') }}" placeholder="+1 234 567 8900">
+                    <input type="text" name="phone" value="{{ old('phone', $receiver->phone) }}" placeholder="+1 234 567 8900">
                     @error('phone')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -178,26 +164,26 @@
                 <div class="form-group">
                     <label>Priority</label>
                     <select name="priority">
-                        <option value="low" {{ old('priority') == 'low' ? 'selected' : '' }}>Low</option>
-                        <option value="medium" {{ old('priority') == 'medium' ? 'selected' : '' }} selected>Medium</option>
-                        <option value="high" {{ old('priority') == 'high' ? 'selected' : '' }}>High</option>
+                        <option value="low" {{ old('priority', $receiver->priority) == 'low' ? 'selected' : '' }}>Low</option>
+                        <option value="medium" {{ old('priority', $receiver->priority) == 'medium' ? 'selected' : '' }}>Medium</option>
+                        <option value="high" {{ old('priority', $receiver->priority) == 'high' ? 'selected' : '' }}>High</option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
                 <label>Message <span class="required">*</span></label>
-                <textarea name="message" placeholder="Write your message here...">{{ old('message') }}</textarea>
+                <textarea name="message" placeholder="Write your message here...">{{ old('message', $receiver->message) }}</textarea>
                 @error('message')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
 
             <button type="submit" class="btn-submit">
-                 Send Message
+                 Update Message
             </button>
 
-            <div style="text-align: center; margin-top: 15px;">
+            <div style="text-align: center;">
                 <a href="{{ route('home') }}" class="btn-back">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
