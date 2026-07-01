@@ -4,50 +4,33 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Receiver;
+use Illuminate\Support\Facades\Mail;
 
 class ReceiverController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Receiver::latest();
+        $query = Receiver::query();
 
-        // Search functionality
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
-                $q->where('sender_name', 'LIKE', '%' . $request->search . '%')
-                  ->orWhere('message', 'LIKE', '%' . $request->search . '%')
-                  ->orWhere('email', 'LIKE', '%' . $request->search . '%');
+                $q->where('sender_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%')
+                  ->orWhere('message', 'like', '%' . $request->search . '%');
             });
         }
 
-        // Filter by priority
         if ($request->filled('priority')) {
             $query->where('priority', $request->priority);
         }
 
-        // Filter by read status
         if ($request->filled('status')) {
-            if ($request->status === 'read') {
-                $query->where('is_read', true);
-            } elseif ($request->status === 'unread') {
-                $query->where('is_read', false);
-            }
+            $query->where('is_read', $request->status === 'read' ? 1 : 0);
         }
 
-        $receivers = $query->paginate(10);
+        $receivers = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        $totalMessages = Receiver::count();
-        $todayMessages = Receiver::whereDate('created_at', today())->count();
-        $unreadMessages = Receiver::where('is_read', false)->count();
-        $highPriority = Receiver::where('priority', 'high')->count();
-
-        return view('receiver.index', compact(
-            'receivers',
-            'totalMessages',
-            'todayMessages',
-            'unreadMessages',
-            'highPriority'
-        ));
+        return view('home', compact('receivers'));
     }
 
     public function create()
@@ -58,27 +41,21 @@ class ReceiverController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'sender_name' => 'required|max:100',
-            'email' => 'nullable|email|max:100',
-            'phone' => 'nullable|max:20',
-            'message' => 'required|max:1000',
-            'priority' => 'in:low,medium,high',
+            'sender_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'priority' => 'required|in:low,medium,high',
+            'message' => 'required|string',
         ]);
 
         Receiver::create($validated);
 
-        return redirect('/')
-            ->with('success', 'Message received successfully!');
+        return redirect()->route('home')->with('success', 'Message created successfully.');
     }
 
     public function show($id)
     {
         $receiver = Receiver::findOrFail($id);
-        
-        if (!$receiver->is_read) {
-            $receiver->markAsRead();
-        }
-
         return view('receiver.show', compact('receiver'));
     }
 
@@ -93,33 +70,35 @@ class ReceiverController extends Controller
         $receiver = Receiver::findOrFail($id);
 
         $validated = $request->validate([
-            'sender_name' => 'required|max:100',
-            'email' => 'nullable|email|max:100',
-            'phone' => 'nullable|max:20',
-            'message' => 'required|max:1000',
-            'priority' => 'in:low,medium,high',
+            'sender_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'priority' => 'required|in:low,medium,high',
+            'message' => 'required|string',
         ]);
 
         $receiver->update($validated);
 
-        return redirect('/')
-            ->with('success', 'Message updated successfully!');
+        return redirect()->route('home')->with('success', 'Message updated successfully.');
     }
 
     public function destroy($id)
     {
-        Receiver::findOrFail($id)->delete();
+        $receiver = Receiver::findOrFail($id);
+        $receiver->delete();
 
-        return redirect('/')
-            ->with('success', 'Message deleted successfully!');
+        return redirect()->route('home')->with('success', 'Message deleted successfully.');
     }
 
     public function markAsRead($id)
     {
         $receiver = Receiver::findOrFail($id);
-        $receiver->markAsRead();
+        $receiver->update(['is_read' => true]);
 
-        return redirect()->back()->with('success', 'Message marked as read!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Message marked as read successfully.'
+        ]);
     }
 
     public function bulkDelete(Request $request)
@@ -131,6 +110,46 @@ class ReceiverController extends Controller
 
         Receiver::whereIn('id', $request->ids)->delete();
 
-        return redirect('/')->with('success', 'Messages deleted successfully!');
+        return redirect()->route('home')->with('success', 'Selected messages deleted successfully.');
+    }
+
+    public function sendReply(Request $request, $id)
+    {
+        $receiver = Receiver::findOrFail($id);
+
+        $request->validate([
+            'reply_message' => 'required|string'
+        ]);
+
+        $replyMessage = $request->reply_message;
+
+        Mail::raw($replyMessage, function ($message) use ($receiver) {
+            $message->to($receiver->email)
+                    ->subject('Reply to your inquiry');
+        });
+
+        return redirect()->back()->with('success', 'Reply sent successfully.');
+    }
+
+    public function getAnalyticsData()
+    {
+        $total = Receiver::count();
+        $read = Receiver::where('is_read', 1)->count();
+        $unread = Receiver::where('is_read', 0)->count();
+
+        $high = Receiver::where('priority', 'high')->count();
+        $medium = Receiver::where('priority', 'medium')->count();
+        $low = Receiver::where('priority', 'low')->count();
+
+        return response()->json([
+            'status' => [
+                'labels' => ['Read', 'Unread'],
+                'data' => [$read, $unread]
+            ],
+            'priority' => [
+                'labels' => ['High', 'Medium', 'Low'],
+                'data' => [$high, $medium, $low]
+            ]
+        ]);
     }
 }
