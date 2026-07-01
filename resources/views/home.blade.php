@@ -39,29 +39,35 @@
     }
     .analytics-section {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
         margin-bottom: 25px;
     }
     .chart-box {
         background: #ffffff;
         border-radius: 12px;
-        padding: 20px;
+        padding: 15px 20px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         display: flex;
         flex-direction: column;
+        align-items: center;
     }
     .chart-box h3 {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
         color: #4b5563;
         margin-bottom: 15px;
+        width: 100%;
         text-align: left;
     }
-    .chart-wrapper {
+    .chart-container-wrapper {
         position: relative;
-        height: 200px;
+        height: 140px;
         width: 100%;
+        max-width: 240px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     .filter-box {
         background: #ffffff;
@@ -275,13 +281,13 @@
     <div class="analytics-section">
         <div class="chart-box">
             <h3>Message Status</h3>
-            <div class="chart-wrapper">
+            <div class="chart-container-wrapper">
                 <canvas id="statusChart"></canvas>
             </div>
         </div>
         <div class="chart-box">
             <h3>Priority Distribution</h3>
-            <div class="chart-wrapper">
+            <div class="chart-container-wrapper">
                 <canvas id="priorityChart"></canvas>
             </div>
         </div>
@@ -479,9 +485,9 @@
                     },
                     options: { 
                         responsive: true, 
-                        maintainAspectRatio: false,
+                        maintainAspectRatio: true,
                         plugins: {
-                            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
                         }
                     }
                 });
@@ -498,9 +504,12 @@
                     },
                     options: { 
                         responsive: true, 
-                        maintainAspectRatio: false, 
+                        maintainAspectRatio: true, 
                         plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+                        scales: { 
+                            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 9 } } },
+                            x: { ticks: { font: { size: 9 } } }
+                        } 
                     }
                 });
             }

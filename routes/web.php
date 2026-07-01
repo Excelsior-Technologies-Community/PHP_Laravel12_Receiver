@@ -12,3 +12,6 @@ Route::put('/receiver/{id}', [ReceiverController::class, 'update'])->name('recei
 Route::delete('/receiver/{id}', [ReceiverController::class, 'destroy'])->name('receiver.destroy');
 Route::post('/receiver/{id}/read', [ReceiverController::class, 'markAsRead'])->name('receiver.markRead');
 Route::post('/receiver/bulk-delete', [ReceiverController::class, 'bulkDelete'])->name('receiver.bulkDelete');
+
+Route::post('/receiver/{id}/reply', [ReceiverController::class, 'sendReply'])->name('receiver.reply');
+Route::get('/analytics/data', [ReceiverController::class, 'getAnalyticsData'])->name('analytics.data');
